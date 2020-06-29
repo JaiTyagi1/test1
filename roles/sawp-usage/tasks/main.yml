@@ -7,6 +7,7 @@
      exec_changed: false
      exec_rc: 1
      exec_message: "Execution Failed"
+   ignore_errors: yes
 
 #AIX Server
  - name: aix server
