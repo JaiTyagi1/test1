@@ -1,0 +1,39 @@
+---
+
+# set AIX SWAP usage command
+
+    - name: set AIX SWAP usage command
+      set_fact:
+        swap_usage_cmd: "lsps -s | tail -n1 | awk '{print $2}' | sed 's/%//'"
+
+
+    - name: Collect Top CPU users for AIX server
+      shell: 'ps aux | head -1; ps aux | sort -rn +3 | head -5'
+      register: top_cpu_users
+      failed_when: top_cpu_users.rc == 2
+      changed_when: false
+      ignore_errors: true
+
+
+    - name: Collect Top memory users for AIX server
+      shell: 'svmon -G -O summary=basic,unit=MB'
+      register: top_mem_users
+      failed_when: top_mem_users.rc == 2
+      changed_when: false
+      ignore_errors: true
+
+
+    - name: Collect additional svmon output
+      shell: 'svmon -P -O summary=basic,sortseg=pgsp,unit=MB|head -50'
+      register: aix_svmon_output
+      failed_when: aix_svmon_users.rc == 2
+      changed_when: false
+      ignore_errors: true
+
+
+    - name: preparing ticket log for AIX server
+      set_fact: 
+        exec_message:
+         "Top CPU users: {{ top_cpu_users.stdout }} \
+          Top memory users: {{ top_mem_users.stdout }} \  
+          svmon output: {{ aix_svmon_output.stdout }}"

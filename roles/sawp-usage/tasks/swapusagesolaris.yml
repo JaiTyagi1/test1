@@ -1,0 +1,32 @@
+---
+
+# set Solaris SWAP usage command   
+    - name: set Solaris SWAP usage command
+      set_fact:
+        swap_usage_cmd: |
+          'SW_USED=`swap -s | awk '{print $9}' | cut -dk -f1`; SW_FREE=`swap -s | awk '{print $11}' | cut -dk -f1`; echo "scale=2;100-100*$SW_FREE/($SW_FREE+$SW_USED)" | bc'
+
+
+    - name: Collect Top CPU users for Solaris server
+      command: prstat -S rss -n 25 -v 1 1
+      register: top_cpu_users
+      failed_when: top_cpu_users.rc == 2
+      changed_when: false
+      ignore_errors: true
+
+
+    - name: Collect Top memory users for Solaris server
+      shell: |
+        /usr/platform/`uname -i`/sbin/prtdiag | grep  Memory\ size; vmstat 2 2
+      register: top_mem_users
+      failed_when: top_mem_users.rc == 2
+      changed_when: false
+      ignore_errors: true
+
+
+    - name: preparing ticket log for Solaris server
+      set_fact: 
+        exec_message:
+         "Top CPU users: {{ top_cpu_users.stdout }} \
+          Top memory users: {{ top_mem_users.stdout }}"  
+          

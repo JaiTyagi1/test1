@@ -1,0 +1,54 @@
+---
+- name: check the swap usage
+  shell: |
+    {{ swap_usage_cmd }}
+  register: swap_usage
+  failed_when: swap_usage.rc == 2
+  ignore_errors: true
+  changed_when: false
+
+- block:
+    - name: re-check the SWAP usage using loop
+      shell: |
+        {{ swap_usage_cmd }}
+      register: swap_usage_recheck
+      ignore_errors: true
+      changed_when: false
+      failed_when: swap_usage_recheck.rc == 2
+      until: swap_usage_recheck.stdout | int < swap_threshold_value
+      retries: '{{ max_retry }}'
+      delay: '{{ sleep_time }}'
+    - name: assign swap usage value after re-check
+      set_fact:
+        swap_usage: '{{ swap_usage_recheck }}'
+  when: swap_usage.stdout | int >= swap_threshold_value
+
+- block:
+    - name: set ticket log when SWAP usage is less than threshold value
+      set_fact:
+        exec_success: true
+        exec_changed: false
+        exec_rc: 0
+        exec_message:
+          "Affected_host: {{ affected_host }}. \
+           OS type: {{ ansible_os_family }}. \
+           SWAP Usage in the server is less than the defined \
+           threshold value. Current SWAP usage in the server: \
+           {{ swap_usage.stdout }} and threshold value is: \
+           {{ swap_threshold_value }}. {{ exec_message }} "
+  when: swap_usage.stdout | int < swap_threshold_value
+
+- block:
+    - name: set ticket log when SWAP usage is more than threshold value
+      set_fact:
+        exec_success: true
+        exec_changed: false
+        exec_rc: 3000
+        exec_message:
+          "Affected_host: {{ affected_host }}. \
+           OS type: {{ ansible_os_family }}. \
+           SWAP Usage in the server is more than the defined \
+           threshold value. Current SWAP usage in the server: \
+           {{ swap_usage.stdout }} and threshold value is: \
+           {{ swap_threshold_value }}. {{ exec_message }} "
+  when: swap_usage.stdout | int >= swap_threshold_value

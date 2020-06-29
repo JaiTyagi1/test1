@@ -1,1 +1,28 @@
 ---
+# tasks file for /home/ansibleadmin/roles/swapusage
+
+ - name: initialize facts just in case playbook fails
+   set_fact:
+     exec_success: false
+     exec_changed: false
+     exec_rc: 1
+     exec_message: "Execution Failed"
+
+#AIX Server
+ - name: aix server
+   include_tasks: swapusageaix.yml
+   when: ansible_os_family == "AIX"
+
+#Redhat server
+ - name: linux server
+   include_tasks: swapusagelinux.yml
+   when: ansible_system == "Linux"
+
+#Solaris server
+ - name: solaris server
+   include_tasks: swapusagesolaris.yml
+   when: ansible_os_family == "Solaris"
+
+# Check for SWAP usage
+ - name: finding SWAP usage for server
+   include_tasks: swap_usage.yml
