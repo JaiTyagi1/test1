@@ -11,17 +11,17 @@
 #AIX Server
  - name: aix server
    include_tasks: swapusageaix.yml
-   when: ansible_os_family == "AIX"
+   when: ansible_facts['os_family'] == "AIX"
 
 #Redhat server
  - name: linux server
    include_tasks: swapusagelinux.yml
-   when: ansible_system == "Linux"
+   when: ansible_facts['system'] == "Linux"
 
 #Solaris server
  - name: solaris server
    include_tasks: swapusagesolaris.yml
-   when: ansible_os_family == "Solaris"
+   when: ansible_facts['os_family'] == "Solaris"
 
 # Check for SWAP usage
  - name: finding SWAP usage for server
